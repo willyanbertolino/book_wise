@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createUserProfile } from '@/services/user.service'
-import { registerSchema } from '@/schemas/auth.schema'
 import { getZodErrorMessage } from "@/lib/validation"
+import { registerSchema } from '@/schemas/auth.schema'
+import { createUserProfile } from '@/services/user.service'
+import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
     try {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         const supabase = await createClient()
 
         // Create user on Supabase Auth
-        const { data, error } = await supabase.auth.signUp({email,password,})
+        const { data, error } = await supabase.auth.signUp({email, password})
 
         if (error) {
             return NextResponse.json(
@@ -32,10 +32,10 @@ export async function POST(request: Request) {
         const user = data.user
 
         if (!user) {
-        return NextResponse.json(
-            { error: 'User not created' },
-            { status: 500 }
-        )
+            return NextResponse.json(
+                { error: 'User not created' },
+                { status: 500 }
+            )
         }
 
         // Create user on db with prisma

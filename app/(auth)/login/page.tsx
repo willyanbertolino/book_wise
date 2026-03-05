@@ -1,15 +1,18 @@
 "use client"
 import Link from "next/link";
+import { loginSchema } from "@/schemas/auth.schema";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { z } from "zod";
 
+type LoginInput = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const registered = searchParams.get("registered")
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<LoginInput>({
         email:'',
         password: ''
     })
@@ -21,16 +24,31 @@ export default function LoginPage() {
         setError('')
         setLoading(true)
 
-        try {
-            // const result = await signin()
+        const result = loginSchema.safeParse(formData)
+            if (!result.success) {
+                const firstError = result.error.issues[0]?.message
+                setError(firstError || "Invalid input")
+                setLoading(false)
+                return
+            }
 
-            // if(result?.error) {
-            //     throw new Error("Invalid email or password")
-            // }
+        try {
+            const response = await fetch("api/login", {
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            })
+
+            const data = await response.json()
+
+            if(!response.ok) {
+                throw new Error(data.error || "registration failed")
+            }
 
             // Redirect
-            router.push('/dashboard')
-            router.refresh()
+            router.replace('/dashboard')
 
         } catch (err: unknown) {
             if (err instanceof Error) {

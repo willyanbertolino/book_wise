@@ -28,7 +28,6 @@ export default function RegisterPage () {
             const firstError = result.error.issues[0]?.message
             setError(firstError || "Invalid input")
             setLoading(false)
-            console.log("zod is complaining")
             return
         }
 
@@ -47,8 +46,11 @@ export default function RegisterPage () {
                 throw new Error(data.error || "registration failed")
             }
 
+            // For demo purposes, email confirmation is disabled.
+            // In a production environment, email verification should be enabled.
+            
             // redirection
-            router.push("/login?registered=true")
+            router.replace("/dashboard")
             
         } catch (err: unknown) {
             if (err instanceof Error) {
