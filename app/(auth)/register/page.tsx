@@ -1,69 +1,16 @@
 "use client"
 
-import { registerSchema } from "@/schemas/auth.schema";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { z } from "zod";
+import { useActionState } from "react";
+import { registerAction } from "./register.action";
 
-type RegisterInput = z.infer<typeof registerSchema>
+const initialState = {
+    error: ""
+}
 
 export default function RegisterPage () {
-    const router = useRouter()
-    const [formData, setFormData] = useState<RegisterInput>({
-        fullName: "",
-        email:"",
-        password: ""
-    })
-    const [error, setError] = useState("")
-    const [loading, setLoading] = useState(false)
-
-    const handleSubmit = async (e: React.SubmitEvent) => {
-        e.preventDefault()
-        setError("")
-        setLoading(true)
-
-        const result = registerSchema.safeParse(formData)
-        if (!result.success) {
-            const firstError = result.error.issues[0]?.message
-            setError(firstError || "Invalid input")
-            setLoading(false)
-            return
-        }
-
-        try {
-            const response = await fetch("api/register", {
-                method:"POST",
-                headers:{
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            })
-
-            const data = await response.json()
-
-            if(!response.ok) {
-                throw new Error(data.error || "registration failed")
-            }
-
-            // For demo purposes, email confirmation is disabled.
-            // In a production environment, email verification should be enabled.
-            
-            // redirection
-            router.replace("/dashboard")
-            
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message)
-            } else {
-                setError("Something went wrong")
-            }
-        } finally {
-            setLoading(false)
-        }
-
-    }
-
+    const [state, formAction, pending] = useActionState(registerAction, initialState)
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-md w-full">
@@ -83,21 +30,21 @@ export default function RegisterPage () {
         
                 {/* Registration Form */}
                 <div className="bg-white rounded-2xl shadow-xl p-8">
-                    {error && (
+                    {state.error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <p className="text-red-700 text-sm">{state.error}</p>
                         </div>
                     )}
             
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form
+                    action={formAction}
+                    className="space-y-6">
                         <div>
                             <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
                             <input
-                                id="fullName"
                                 type="text"
                                 required
-                                value= {formData.fullName}
-                                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                name="fullName"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                 placeholder="John Doe"
                                 />
@@ -106,11 +53,9 @@ export default function RegisterPage () {
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                             <input
-                                id="email"
                                 type="email"
                                 required
-                                value= {formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                name="email"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                 placeholder="john@example.com"
                                 />
@@ -119,12 +64,10 @@ export default function RegisterPage () {
                         <div>
                             <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                             <input
-                                id="password"
                                 type="password"
                                 required
+                                name="password"
                                 minLength={6}
-                                value= {formData.password}
-                                onChange={(e) => setFormData({...formData, password: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                 placeholder="••••••••"
                                 />
@@ -133,9 +76,9 @@ export default function RegisterPage () {
             
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={pending}
                             className="w-full py-3 px-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
-                            >{loading ? "Creating Account...":"Create Account"}
+                            >{pending ? "Creating Account...":"Register"}
                         </button>
                     </form>
             

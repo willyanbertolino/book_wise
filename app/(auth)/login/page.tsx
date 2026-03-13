@@ -1,66 +1,16 @@
 "use client"
-import Link from "next/link";
-import { loginSchema } from "@/schemas/auth.schema";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { z } from "zod";
 
-type LoginInput = z.infer<typeof loginSchema>
+import Link from "next/link";
+import { useActionState } from "react";
+import { loginAction } from "./login.action";
+
+const initialState = {
+    error: ""
+}
 
 export default function LoginPage() {
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const registered = searchParams.get("registered")
-
-    const [formData, setFormData] = useState<LoginInput>({
-        email:'',
-        password: ''
-    })
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
-
-    const handleSubmit = async (e: React.SubmitEvent) => {
-        e.preventDefault()
-        setError('')
-        setLoading(true)
-
-        const result = loginSchema.safeParse(formData)
-            if (!result.success) {
-                const firstError = result.error.issues[0]?.message
-                setError(firstError || "Invalid input")
-                setLoading(false)
-                return
-            }
-
-        try {
-            const response = await fetch("api/login", {
-                method:"POST",
-                headers:{
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            })
-
-            const data = await response.json()
-
-            if(!response.ok) {
-                throw new Error(data.error || "registration failed")
-            }
-
-            // Redirect
-            router.replace('/dashboard')
-
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message)
-            } else {
-                setError("Something went wrong")
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
+    const [state, formAction, pending] = useActionState(loginAction, initialState)
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-md w-full">
@@ -81,29 +31,19 @@ export default function LoginPage() {
                 {/* Login Form */}
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                     
-                    { registered && (
-                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="text-green-700 text-sm">
-                            ✓ Account created successfully! Please sign in.
-                            </p>
-                        </div>
-                    )}
-                
-                    {error && (
+                    {state.error && (
                         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <p className="text-red-700 text-sm">{state.error}</p>
                         </div>
                     )}
                 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form action={formAction} className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                             <input
-                                id="email"
                                 type="email"
+                                name="email"
                                 required
-                                value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                 placeholder="john@example.com"
                             />
@@ -119,11 +59,9 @@ export default function LoginPage() {
                                 </Link>
                             </div>
                             <input
-                                id="password"
+                                name="password"
                                 type="password"
                                 required
-                                value={formData.password}
-                                onChange={(e) => setFormData({...formData, password: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                                 placeholder="••••••••"
                                 />
@@ -131,9 +69,9 @@ export default function LoginPage() {
                 
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={pending}
                             className="w-full py-3 px-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
-                            >{loading ? "Signing In..." : "Sign In"}
+                            >{pending ? "Signing In..." : "Login"}
                         </button>
                     </form>
                 
