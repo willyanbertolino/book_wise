@@ -6,25 +6,25 @@ import { createContext, useContext } from "react"
 const UserContext = createContext<User | undefined>(undefined)
 
 export function UserProvider({
-  user,
-  children,
+    user,
+    children,
 }: {
-  user: User
-  children: React.ReactNode
+    user: User
+    children: React.ReactNode
 }) {
-  return (
-    <UserContext.Provider value={user}>
-      {children}
-    </UserContext.Provider>
-  )
+    return (
+        <UserContext.Provider value={user}>
+            {children}
+        </UserContext.Provider>
+    )
 }
 
 export function useUser() {
-  const context = useContext(UserContext)
+    const context = useContext(UserContext)
 
-  if (!context) {
-    throw new Error("useUser must be used inside UserProvider")
-  }
+    if (!context) {
+        throw new Error("useUser must be used inside UserProvider")
+    }
 
-  return context
+    return context
 }

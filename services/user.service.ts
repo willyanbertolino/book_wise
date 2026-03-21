@@ -8,6 +8,7 @@ export async function createUserProfile(userId: string, email: string, fullName:
             email,
             fullName,
             role: UserRole.USER,
+            subscriptionStatus: "ACTIVE"
         },
     })
 }

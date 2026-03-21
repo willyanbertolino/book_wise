@@ -1,8 +1,8 @@
-import { createUserProfile } from "@/services/user.service"
-import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
+import { createUserProfile } from "@/services/user.service"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 
 export async function registerUser(
     fullName: string,
@@ -32,7 +32,7 @@ export async function registerUser(
     await createUserProfile(
         user.id,
         user.email!,
-        fullName
+        fullName,
     )
 }
 
@@ -59,15 +59,19 @@ export async function logoutUser() {
     }
 }
 
-
 export const getCurrentUser = cache(async () => {
     const supabase = await createClient()
-    const {data: { user }} = await supabase.auth.getUser()
+    const { data, error } = await supabase.auth.getUser()
+
+    if (error || !data.user) return null
+
+    const user = await prisma.user.findUnique({
+        where: { id: data.user.id }
+    })
 
     if (!user) return null
 
-    const profile = await prisma.user.findUnique({where: { id: user.id }})
-    return profile
+    return user
 })
 
 export async function getCurrentUserOrRedirect() {

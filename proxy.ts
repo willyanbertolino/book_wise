@@ -21,12 +21,12 @@ export async function proxy(request: NextRequest) {
         }
     )
 
-    // Força validação e refresh automático
+    // Validation and automatic refresh
     const {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // 🔒 Proteção de rota
+    // Protected route
     if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
